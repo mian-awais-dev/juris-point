@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Student – Juris Point</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <div id="navbar-placeholder"></div>
+
+    <div class="auth-page">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo-container" style="justify-content:center;">
+                    <img src="assets/images/logo.png" alt="Juris Point Logo" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="logo-fallback" style="display:none; color:var(--primary-dark);">
+                        <i class="fas fa-balance-scale" style="color:var(--accent-gold);"></i> <span>JURIS</span> POINT
+                    </div>
+                </div>
+                <h2>Student Registration</h2>
+                <p>Gain complete access to premium mock assessments</p>
+            </div>
+
+            <!-- Errors/Success Alert -->
+            <div id="alert-box" class="alert"></div>
+
+            <form id="register-form" onsubmit="event.preventDefault(); handleRegistration();">
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" class="form-control" placeholder="e.g. Barrister John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" class="form-control" placeholder="e.g. john@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="Minimum 6 characters" required minlength="6">
+                </div>
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="form-control" placeholder="Re-enter password" required>
+                </div>
+                <button type="submit" class="btn btn-gold" style="width: 100%;">Create Account</button>
+            </form>
+
+            <div class="auth-footer">
+                Already registered? <a href="student-login.html">Login Here</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        function handleRegistration() {
+            const name = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+
+            if (pass !== confirmPass) {
+                const alertBox = document.getElementById('alert-box');
+                alertBox.innerText = "Passwords do not match!";
+                alertBox.className = "alert alert-danger";
+                alertBox.style.display = "block";
+                return;
+            }
+
+            registerStudent(name, email, pass);
+        }
+    </script>
+</body>
+</html>

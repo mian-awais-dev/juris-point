@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel – Juris Point</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+
+    <div id="navbar-placeholder"></div>
+
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="dashboard-sidebar" style="border-right-color: var(--primary-medium);">
+            <ul class="sidebar-menu">
+                <li class="active" id="menu-overview"><a href="#" onclick="switchTab('overview')" data-label="Overview Stats"><i class="fas fa-columns"></i><span class="sidebar-label"> Overview Stats</span></a></li>
+                <li id="menu-lectures"><a href="#" onclick="switchTab('lectures')" data-label="Manage Lectures"><i class="fas fa-video"></i><span class="sidebar-label"> Manage Lectures</span></a></li>
+                <li id="menu-notes"><a href="#" onclick="switchTab('notes')" data-label="Manage Notes"><i class="fas fa-file-pdf"></i><span class="sidebar-label"> Manage Notes</span></a></li>
+                <li id="menu-papers"><a href="#" onclick="switchTab('papers')" data-label="Past Papers"><i class="fas fa-graduation-cap"></i><span class="sidebar-label"> Past Papers</span></a></li>
+                <li id="menu-mcqs"><a href="#" onclick="switchTab('mcqs')" data-label="Practice MCQs"><i class="fas fa-question-circle"></i><span class="sidebar-label"> Practice MCQs</span></a></li>
+                <li id="menu-tests"><a href="#" onclick="switchTab('tests')" data-label="Mock Tests"><i class="fas fa-file-contract"></i><span class="sidebar-label"> Mock Tests</span></a></li>
+                <li id="menu-quizzes"><a href="#" onclick="switchTab('quizzes')" data-label="Topic Quizzes"><i class="fas fa-spell-check"></i><span class="sidebar-label"> Topic Quizzes</span></a></li>
+                <li id="menu-students"><a href="#" onclick="switchTab('students')" data-label="Student Records"><i class="fas fa-users"></i><span class="sidebar-label"> Student Records</span></a></li>
+            </ul>
+
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <!-- Sidebar toggle for mobile -->
+            <button class="btn btn-outline" style="margin-bottom: 20px; display: none; padding: 6px 12px; font-size:12px;" id="mobile-sidebar-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars" style="margin-right:6px;"></i> Menu
+            </button>
+
+            <!-- 1. Overview Section -->
+            <div id="section-overview" class="dashboard-section active-section">
+                <div class="dashboard-header">
+                    <h2>Administrative Overview</h2>
+                    <p style="color:var(--text-muted); font-size:14px;">Operational analytics and content summary metrics.</p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon flex-center"><i class="fas fa-users"></i></div>
+                        <div class="stat-info">
+                            <h4>Total Students</h4>
+                            <p id="stat-admin-students">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon flex-center" style="background-color:rgba(59, 130, 246, 0.1); color:var(--info);"><i class="fas fa-video"></i></div>
+                        <div class="stat-info">
+                            <h4>Lectures</h4>
+                            <p id="stat-admin-lectures">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon flex-center" style="background-color:rgba(16, 185, 129, 0.1); color:var(--success);"><i class="fas fa-file-pdf"></i></div>
+                        <div class="stat-info">
+                            <h4>Notes PDF</h4>
+                            <p id="stat-admin-notes">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon flex-center" style="background-color:rgba(245, 158, 11, 0.1); color:var(--warning);"><i class="fas fa-scroll"></i></div>
+                        <div class="stat-info">
+                            <h4>Past Papers</h4>
+                            <p id="stat-admin-papers">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon flex-center" style="background-color:rgba(239, 68, 68, 0.1); color:var(--error);"><i class="fas fa-file-contract"></i></div>
+                        <div class="stat-info">
+                            <h4>Mock Tests</h4>
+                            <p id="stat-admin-tests">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">System Status</h3>
+                    </div>
+                    <div class="panel-body">
+                        <p style="font-size:14px; color:var(--text-muted);">Welcome to the administrative portal. To manage lectures, upload PDFs, or build assessment mock tests, select options from the sidebar. Only authenticated administrators have permissions to perform modifications on these datasets.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Lectures Management Section -->
+            <div id="section-lectures" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>Manage Lectures</h2>
+                </div>
+                <div class="grid-2">
+                    <div class="panel">
+                        <div class="panel-header"><h3 class="panel-title">Add Lecture</h3></div>
+                        <div class="panel-body">
+                            <form id="add-lecture-form" onsubmit="event.preventDefault(); submitLecture();">
+                                <div class="form-group">
+                                    <label for="lec-title">Title</label>
+                                    <input type="text" id="lec-title" class="form-control" placeholder="e.g. Constitutional Law Overview" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lec-desc">Description</label>
+                                    <textarea id="lec-desc" class="form-control" rows="3" placeholder="Brief summary of syllabus points..." required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lec-cat">Category</label>
+                                    <select id="lec-cat" class="form-control" required>
+                                        <option value="Constitution">Constitutional Prep</option>
+                                        <option value="English">English Grammar</option>
+                                        <option value="Islamic">Islamic Law</option>
+                                        <option value="General Knowledge">General Knowledge</option>
+                                        <option value="Law of Torts">Law of Torts</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lec-dur">Duration</label>
+                                    <input type="text" id="lec-dur" class="form-control" placeholder="e.g. 45 Mins" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 24px;">
+                                    <label for="lec-url">YouTube Link or Video File URL</label>
+                                    <input type="url" id="lec-url" class="form-control" placeholder="https://www.youtube.com/watch?v=..." required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Upload Lecture</button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <div class="panel-header"><h3 class="panel-title">Lectures List</h3></div>
+                        <div class="panel-body" style="padding:0;">
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Category</th>
+                                            <th>Duration</th>
+                                            <th>Link</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-lectures-table-body">
+                                        <!-- Dynamic entries -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Notes Management Section -->
+            <div id="section-notes" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>Manage Notes PDFs</h2>
+                </div>
+                <div class="grid-2">
+                    <div class="panel">
+                        <div class="panel-header"><h3 class="panel-title">Upload Study Notes</h3></div>
+                        <div class="panel-body">
+                            <form id="add-notes-form" onsubmit="event.preventDefault(); submitNotes();">
+                                <div class="form-group">
+                                    <label for="note-title">Title</label>
+                                    <input type="text" id="note-title" class="form-control" placeholder="e.g. Criminal Law Landmark Precedents" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="note-desc">Description</label>
+                                    <textarea id="note-desc" class="form-control" rows="3" placeholder="Brief outline..." required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="note-cat">Category</label>
+                                    <select id="note-cat" class="form-control" required>
+                                        <option value="Constitution">Constitutional Prep</option>
+                                        <option value="English">English Prep</option>
+                                        <option value="Islamic">Islamic Prep</option>
+                                        <option value="General Prep">General Knowledge</option>
+                                        <option value="Civil Procedure">Civil Procedure</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 24px;">
+                                    <label for="note-file">PDF Link (Google Drive or URL)</label>
+                                    <input type="url" id="note-file" class="form-control" placeholder="https://drive.google.com/file/d/..." required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Upload Document</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header"><h3 class="panel-title">Uploaded Notes</h3></div>
+                        <div class="panel-body" style="padding:0;">
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Category</th>
+                                            <th>PDF</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-notes-table-body">
+                                        <!-- Dynamic entries -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Past Papers Management Section -->
+            <div id="section-papers" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>Manage Past Papers</h2>
+                </div>
+                <div class="grid-2">
+                    <div class="panel">
+                        <div class="panel-header"><h3 class="panel-title">Upload Past Paper</h3></div>
+                        <div class="panel-body">
+                            <form id="add-paper-form" onsubmit="event.preventDefault(); submitPastPaper();">
+                                <div class="form-group">
+                                    <label for="paper-title">Paper Title</label>
+                                    <input type="text" id="paper-title" class="form-control" placeholder="e.g. LAT Law Admission Test" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="paper-subject">Subject</label>
+                                    <input type="text" id="paper-subject" class="form-control" placeholder="e.g. Personal Statement / Law Outline" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="paper-type">Exam Category</label>
+                                    <select id="paper-type" class="form-control" required>
+                                        <option value="LAT">LAT</option>
+                                        <option value="Law">Law (Bar/LL.B)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="paper-year">Year</label>
+                                    <input type="number" id="paper-year" class="form-control" placeholder="e.g. 2023" required min="2000" max="2030">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 24px;">
+                                    <label for="paper-file">Past Paper PDF Link (Google Drive or URL)</label>
+                                    <input type="url" id="paper-file" class="form-control" placeholder="https://drive.google.com/file/d/..." required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Publish Past Paper</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header"><h3 class="panel-title">Past Papers Catalog</h3></div>
+                        <div class="panel-body" style="padding:0;">
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Exam Type</th>
+                                            <th>Subject</th>
+                                            <th>Year</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-papers-table-body">
+                                        <!-- Dynamic entries -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Expected MCQs Practice Section -->
+            <div id="section-mcqs" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>Manage Expected Practice MCQs</h2>
+                </div>
+                <div class="grid-2">
+                    <div class="panel">
+                        <div class="panel-header"><h3 class="panel-title">Add Expected MCQ</h3></div>
+                        <div class="panel-body">
+                            <form id="add-mcq-form" onsubmit="event.preventDefault(); submitExpectedMcq();">
+                                <div class="form-group">
+                                    <label for="mcq-question">Question Statement</label>
+                                    <input type="text" id="mcq-question" class="form-control" placeholder="e.g. Under which article of constitution..." required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mcq-opt-a">Option A</label>
+                                    <input type="text" id="mcq-opt-a" class="form-control" placeholder="e.g. Article 1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mcq-opt-b">Option B</label>
+                                    <input type="text" id="mcq-opt-b" class="form-control" placeholder="e.g. Article 2" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mcq-opt-c">Option C</label>
+                                    <input type="text" id="mcq-opt-c" class="form-control" placeholder="e.g. Article 3" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mcq-opt-d">Option D</label>
+                                    <input type="text" id="mcq-opt-d" class="form-control" placeholder="e.g. Article 4" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mcq-correct">Correct Option</label>
+                                    <select id="mcq-correct" class="form-control" required>
+                                        <option value="A">A</option>
+                                        <option value="B">B</option>
+                                        <option value="C">C</option>
+                                        <option value="D">D</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mcq-category">Category</label>
+                                    <select id="mcq-category" class="form-control" required>
+                                        <option value="Constitution">Constitution</option>
+                                        <option value="Islamic Jurisprudence">Islamic Jurisprudence</option>
+                                        <option value="English">English Verbal</option>
+                                        <option value="General Knowledge">General Knowledge</option>
+                                        <option value="Law of Torts">Law of Torts</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 24px;">
+                                    <label for="mcq-explanation">Explanation / Precedent Cite (Optional)</label>
+                                    <textarea id="mcq-explanation" class="form-control" rows="2" placeholder="Reference explanation shown after answers click..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Add MCQ</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header"><h3 class="panel-title">Active MCQ Database</h3></div>
+                        <div class="panel-body" style="padding:0;">
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Category</th>
+                                            <th>Question</th>
+                                            <th>Correct</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-mcqs-table-body">
+                                        <!-- Dynamic entries -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Mock Tests Section -->
+            <div id="section-tests" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>Manage Mock Assessments</h2>
+                </div>
+                <div class="grid-2">
+                    <div class="panel">
+                        <div class="panel-header"><h3 class="panel-title">Build New Mock Test</h3></div>
+                        <div class="panel-body">
+                            <form id="add-mocktest-form" onsubmit="event.preventDefault(); saveMockTest();">
+                                <div class="form-group">
+                                    <label for="test-title">Mock Test Title</label>
+                                    <input type="text" id="test-title" class="form-control" placeholder="e.g. LAT Entrance Mock Exam #1" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label for="test-duration">Duration (Minutes)</label>
+                                    <input type="number" id="test-duration" class="form-control" placeholder="e.g. 90" required>
+                                </div>
+                                
+                                <div style="border-top:1px solid #E2E8F0; padding-top:20px; margin-top:20px; margin-bottom:20px;">
+                                    <h4 style="font-size:14px; margin-bottom:12px;">Add Question to Mock Exam</h4>
+                                    <div class="form-group">
+                                        <label>Question Statement</label>
+                                        <input type="text" id="mock-q-text" class="form-control" placeholder="Question text">
+                                    </div>
+                                    <div class="grid-2" style="gap:10px; margin-bottom:10px;">
+                                        <input type="text" id="mock-opt-a" class="form-control" placeholder="Option A">
+                                        <input type="text" id="mock-opt-b" class="form-control" placeholder="Option B">
+                                    </div>
+                                    <div class="grid-2" style="gap:10px; margin-bottom:10px;">
+                                        <input type="text" id="mock-opt-c" class="form-control" placeholder="Option C">
+                                        <input type="text" id="mock-opt-d" class="form-control" placeholder="Option D">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Correct Choice</label>
+                                        <select id="mock-correct" class="form-control">
+                                            <option value="A">A</option>
+                                            <option value="B">B</option>
+                                            <option value="C">C</option>
+                                            <option value="D">D</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Explanation (Optional)</label>
+                                        <input type="text" id="mock-explanation" class="form-control" placeholder="Why is this answer correct?">
+                                    </div>
+                                    <button type="button" class="btn btn-outline" style="padding: 8px 16px; font-size:12px;" onclick="addQuestionToBuilderList('mock')">Add Question to Mock List</button>
+                                </div>
+
+                                <div style="margin-bottom:24px;">
+                                    <h4 style="font-size:14px; margin-bottom:8px;">Questions List Preview</h4>
+                                    <div id="mock-questions-preview" style="max-height:200px; overflow-y:auto; border:1px solid #CBD5E1; padding:12px; border-radius:6px;">
+                                        <p style="color:var(--text-muted); font-size:13px;">No questions added yet.</p>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary" style="width:100%;">Create Assessment</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header"><h3 class="panel-title">Active Mock Exams</h3></div>
+                        <div class="panel-body" style="padding:0;">
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Exam Title</th>
+                                            <th>Duration</th>
+                                            <th>Total MCQs</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-tests-table-body">
+                                        <!-- Dynamic entries -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. Topic Quizzes Section -->
+            <div id="section-quizzes" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>Manage Topic Quizzes</h2>
+                </div>
+                <div class="grid-2">
+                    <div class="panel">
+                        <div class="panel-header"><h3 class="panel-title">Create Topic Quiz</h3></div>
+                        <div class="panel-body">
+                            <form id="add-quiz-form" onsubmit="event.preventDefault(); saveQuiz();">
+                                <div class="form-group">
+                                    <label for="quiz-title">Quiz Title</label>
+                                    <input type="text" id="quiz-title" class="form-control" placeholder="e.g. Constitutional Law Part 1" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label for="quiz-category">Category</label>
+                                    <select id="quiz-category" class="form-control" required>
+                                        <option value="Constitution">Constitutional Prep</option>
+                                        <option value="English">English Verbal</option>
+                                        <option value="Islamic">Islamic Law</option>
+                                        <option value="General Knowledge">General Knowledge</option>
+                                    </select>
+                                </div>
+
+                                <div style="border-top:1px solid #E2E8F0; padding-top:20px; margin-top:20px; margin-bottom:20px;">
+                                    <h4 style="font-size:14px; margin-bottom:12px;">Add Question to Quiz</h4>
+                                    <div class="form-group">
+                                        <label>Question Statement</label>
+                                        <input type="text" id="quiz-q-text" class="form-control" placeholder="Question text">
+                                    </div>
+                                    <div class="grid-2" style="gap:10px; margin-bottom:10px;">
+                                        <input type="text" id="quiz-opt-a" class="form-control" placeholder="Option A">
+                                        <input type="text" id="quiz-opt-b" class="form-control" placeholder="Option B">
+                                    </div>
+                                    <div class="grid-2" style="gap:10px; margin-bottom:10px;">
+                                        <input type="text" id="quiz-opt-c" class="form-control" placeholder="Option C">
+                                        <input type="text" id="quiz-opt-d" class="form-control" placeholder="Option D">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Correct Option</label>
+                                        <select id="quiz-correct" class="form-control">
+                                            <option value="A">A</option>
+                                            <option value="B">B</option>
+                                            <option value="C">C</option>
+                                            <option value="D">D</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Explanation (Optional)</label>
+                                        <input type="text" id="quiz-explanation" class="form-control" placeholder="Why is this answer correct?">
+                                    </div>
+                                    <button type="button" class="btn btn-outline" style="padding: 8px 16px; font-size:12px;" onclick="addQuestionToBuilderList('quiz')">Add Question to Quiz List</button>
+                                </div>
+
+                                <div style="margin-bottom:24px;">
+                                    <h4 style="font-size:14px; margin-bottom:8px;">Quiz Questions Preview</h4>
+                                    <div id="quiz-questions-preview" style="max-height:200px; overflow-y:auto; border:1px solid #CBD5E1; padding:12px; border-radius:6px;">
+                                        <p style="color:var(--text-muted); font-size:13px;">No questions added yet.</p>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary" style="width:100%;">Create Quiz</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header"><h3 class="panel-title">Active Topic Quizzes</h3></div>
+                        <div class="panel-body" style="padding:0;">
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Quiz Title</th>
+                                            <th>Category</th>
+                                            <th>Total Questions</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-quizzes-table-body">
+                                        <!-- Dynamic entries -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8. Student Records Section -->
+            <div id="section-students" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>Registered Student Profiles</h2>
+                    <p style="color:var(--text-muted); font-size:14px;">Review student registry profiles and their completed assessment histories.</p>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header"><h3 class="panel-title">Student Registry</h3></div>
+                    <div class="panel-body" style="padding:0;">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Registered Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-students-table-body">
+                                    <!-- Dynamic rows from admin.js -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/admin.js"></script>
+    
+    <script>
+        // Check Auth Guard (Role must be admin)
+        checkAuthAndRole(['admin'], 'admin-login.html');
+
+        // Render dashboard when auth is verified
+        window.addEventListener('authReady', (e) => {
+            loadAdminDashboard();
+        });
+
+        // Tab switcher
+        function switchTab(tabId) {
+            document.querySelectorAll('.dashboard-section').forEach(sec => sec.classList.remove('active-section'));
+            document.getElementById(`section-${tabId}`).classList.add('active-section');
+            
+            document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
+            document.getElementById(`menu-${tabId}`).classList.add('active');
+
+            const sidebar = document.getElementById('dashboard-sidebar');
+            if (sidebar.classList.contains('sidebar-open')) {
+                sidebar.classList.remove('sidebar-open');
+            }
+        }
+
+        // Mobile Sidebar toggler
+        function toggleSidebar() {
+            const sidebar = document.getElementById('dashboard-sidebar');
+            sidebar.classList.toggle('sidebar-open');
+        }
+
+
+
+        // Form submissions mapping
+        function submitLecture() {
+            const title = document.getElementById('lec-title').value;
+            const desc = document.getElementById('lec-desc').value;
+            const cat = document.getElementById('lec-cat').value;
+            const dur = document.getElementById('lec-dur').value;
+            const url = document.getElementById('lec-url').value;
+            handleUploadLecture(title, desc, cat, dur, url);
+        }
+
+        function submitNotes() {
+            const title = document.getElementById('note-title').value;
+            const desc = document.getElementById('note-desc').value;
+            const cat = document.getElementById('note-cat').value;
+            const fileUrl = document.getElementById('note-file').value;
+            handleUploadNotes(title, desc, cat, fileUrl);
+        }
+
+        function submitPastPaper() {
+            const title = document.getElementById('paper-title').value;
+            const subj = document.getElementById('paper-subject').value;
+            const type = document.getElementById('paper-type').value;
+            const year = document.getElementById('paper-year').value;
+            const fileUrl = document.getElementById('paper-file').value;
+            handleUploadPastPaper(title, subj, type, year, fileUrl);
+        }
+
+        function submitExpectedMcq() {
+            const q = document.getElementById('mcq-question').value;
+            const a = document.getElementById('mcq-opt-a').value;
+            const b = document.getElementById('mcq-opt-b').value;
+            const c = document.getElementById('mcq-opt-c').value;
+            const d = document.getElementById('mcq-opt-d').value;
+            const correct = document.getElementById('mcq-correct').value;
+            const cat = document.getElementById('mcq-category').value;
+            const exp = document.getElementById('mcq-explanation').value;
+            handleAddExpectedMcq(q, a, b, c, d, correct, cat, exp);
+        }
+
+        function saveMockTest() {
+            const title = document.getElementById('test-title').value;
+            const dur = document.getElementById('test-duration').value;
+            handleSaveMockTest(title, dur);
+        }
+
+        function saveQuiz() {
+            const title = document.getElementById('quiz-title').value;
+            const cat = document.getElementById('quiz-category').value;
+            handleSaveQuiz(title, cat);
+        }
+
+        // Show toggle button for mobile sidebar
+        if (window.innerWidth <= 768) {
+            document.getElementById('mobile-sidebar-toggle').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

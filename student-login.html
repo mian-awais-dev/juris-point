@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login – Juris Point</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <div id="navbar-placeholder"></div>
+
+    <div class="auth-page">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo-container" style="justify-content:center;">
+                    <img src="assets/images/logo.png" alt="Juris Point Logo" class="logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="logo-fallback" style="display:none; color:var(--primary-dark);">
+                        <i class="fas fa-balance-scale" style="color:var(--accent-gold);"></i> <span>JURIS</span> POINT
+                    </div>
+                </div>
+                <h2>Student Login</h2>
+                <p>Welcome back! Please enter credentials to study.</p>
+            </div>
+
+            <!-- Errors/Success Alert -->
+            <div id="alert-box" class="alert"></div>
+
+            <form id="login-form" onsubmit="event.preventDefault(); handleLogin();">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" class="form-control" placeholder="e.g. student@email.com" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="Enter password" required>
+                </div>
+                <div class="flex-between" style="margin-bottom: 24px;">
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="rememberMe">
+                        <label for="rememberMe" style="display:inline; font-weight:normal; margin:0;">Remember me</label>
+                    </div>
+                    <a href="forgot-password.html" style="font-size: 13px; color: var(--primary-medium); font-weight:600;">Forgot Password?</a>
+                </div>
+                <button type="submit" class="btn btn-gold" style="width: 100%;">Log In</button>
+            </form>
+
+            <div class="auth-footer">
+                Don't have an account? <a href="student-register.html">Sign Up Here</a>
+                <div style="margin-top: 15px; border-top: 1px solid #E2E8F0; padding-top: 15px; font-size:12px;">
+                    Are you an administrator? <a href="admin-login.html" style="color:var(--accent-gold);">Admin Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        function handleLogin() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            loginStudent(email, pass);
+        }
+    </script>
+</body>
+</html>

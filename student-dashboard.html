@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0">
+    <title>Student Dashboard – Juris Point</title>
+    <link rel="stylesheet" href="css/style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* ============================================
+           MOBILE RESPONSIVENESS FIX – Student Dashboard
+           ============================================ */
+
+        /* --- Base: prevent horizontal overflow on any screen --- */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+        /* --- Dashboard layout: sidebar + main side by side on desktop --- */
+        .dashboard-container {
+            display: flex;
+            align-items: flex-start;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* --- Sidebar default (desktop) --- */
+        .sidebar {
+            width: 240px;
+            min-width: 240px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        /* --- Main content fills remaining space --- */
+        .main-content {
+            flex: 1;
+            min-width: 0; /* prevents flex child from overflowing */
+            padding: 24px;
+        }
+
+        /* --- Stats grid: 2 columns on desktop, 1 on mobile --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        /* --- Tables: scrollable wrapper so they never break layout --- */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-wrapper table {
+            min-width: 500px; /* table won't crush below this */
+            width: 100%;
+        }
+
+        /* --- Mobile sidebar toggle button: hidden on desktop --- */
+        #mobile-sidebar-toggle {
+            display: none;
+        }
+
+        /* ============================================
+           TABLET (max 1024px)
+           ============================================ */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 200px;
+                min-width: 200px;
+            }
+
+            .main-content {
+                padding: 20px 16px;
+            }
+        }
+
+        /* ============================================
+           MOBILE (max 768px)
+           ============================================ */
+        @media (max-width: 768px) {
+
+            /* Show the hamburger toggle */
+            #mobile-sidebar-toggle {
+                display: flex !important;
+                align-items: center;
+                margin-bottom: 16px;
+            }
+
+            /* Dashboard stacks vertically */
+            .dashboard-container {
+                flex-direction: column;
+                position: relative;
+            }
+
+            /* Sidebar slides in from left as overlay */
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                width: 75vw;
+                max-width: 280px;
+                height: 100vh;
+                z-index: 999;
+                transition: left 0.3s ease;
+                overflow-y: auto;
+                box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+            }
+
+            /* When toggled open */
+            .sidebar.sidebar-open {
+                left: 0;
+            }
+
+            /* Semi-transparent backdrop behind open sidebar */
+            .sidebar.sidebar-open::before {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.4);
+                z-index: -1;
+            }
+
+            /* Main content takes full width */
+            .main-content {
+                width: 100%;
+                padding: 16px 12px;
+            }
+
+            /* Stats: single column on small screens */
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            /* Stat cards: horizontal layout on mobile */
+            .stat-card {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                padding: 16px;
+            }
+
+            .stat-card .stat-icon {
+                flex-shrink: 0;
+                width: 48px;
+                height: 48px;
+            }
+
+            /* Dashboard header text scaling */
+            .dashboard-header h2 {
+                font-size: 20px;
+            }
+
+            .dashboard-header p {
+                font-size: 13px;
+            }
+
+            /* Panel padding tighter on mobile */
+            .panel-body {
+                padding: 12px;
+            }
+
+            /* Profile form full width inputs */
+            #profile-form .form-control {
+                width: 100%;
+            }
+
+            /* Buttons full width on mobile forms */
+            #profile-form .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        /* ============================================
+           SMALL MOBILE (max 480px)
+           ============================================ */
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 12px 8px;
+            }
+
+            .dashboard-header h2 {
+                font-size: 18px;
+            }
+
+            .panel-header {
+                padding: 12px 12px;
+            }
+
+            /* Shrink table font slightly to fit more content */
+            .table-wrapper table {
+                font-size: 13px;
+            }
+
+            .table-wrapper th,
+            .table-wrapper td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="navbar-placeholder"></div>
+
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="dashboard-sidebar">
+            <ul class="sidebar-menu">
+                <li class="active" id="menu-overview"><a href="#" onclick="switchTab('overview')" data-label="Overview"><i class="fas fa-chart-pie"></i><span class="sidebar-label"> Overview</span></a></li>
+                <li id="menu-profile"><a href="#" onclick="switchTab('profile')" data-label="Profile Settings"><i class="fas fa-user-cog"></i><span class="sidebar-label"> Profile Settings</span></a></li>
+                <li><a href="mocktests.html" data-label="Mock Tests"><i class="fas fa-file-contract"></i><span class="sidebar-label"> Mock Tests</span></a></li>
+                <li><a href="quizzes.html" data-label="Quizzes"><i class="fas fa-spell-check"></i><span class="sidebar-label"> Quizzes</span></a></li>
+                <li><a href="lectures.html" data-label="Video Seminars"><i class="fas fa-video"></i><span class="sidebar-label"> Video Seminars</span></a></li>
+                <li><a href="notes.html" data-label="Study Notes"><i class="fas fa-file-alt"></i><span class="sidebar-label"> Study Notes</span></a></li>
+                <li><a href="pastpapers.html" data-label="Past Papers"><i class="fas fa-graduation-cap"></i><span class="sidebar-label"> Past Papers</span></a></li>
+                <li><a href="expected-mcqs.html" data-label="Practice MCQs"><i class="fas fa-question-circle"></i><span class="sidebar-label"> Practice MCQs</span></a></li>
+            </ul>
+
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <!-- Sidebar toggle for mobile -->
+            <button class="btn btn-outline" id="mobile-sidebar-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars" style="margin-right:6px;"></i> Menu
+            </button>
+
+            <!-- Dashboard Overview Panel -->
+            <div id="section-overview" class="dashboard-section active-section">
+                <div class="dashboard-header">
+                    <h2>Welcome back, <span id="student-name-welcome">Student</span></h2>
+                    <p style="color:var(--text-muted); font-size:14px;">Here is your legal preparation progress overview.</p>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon flex-center"><i class="fas fa-medal"></i></div>
+                        <div class="stat-info">
+                            <h4>Mock Assessments</h4>
+                            <p id="stat-completed-tests">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon flex-center" style="background-color:rgba(16, 185, 129, 0.1); color:var(--success);"><i class="fas fa-percentage"></i></div>
+                        <div class="stat-info">
+                            <h4>Average Score</h4>
+                            <p id="stat-avg-score">0%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent results Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">Assessment History</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Exam / Quiz Title</th>
+                                        <th>Type</th>
+                                        <th>Score</th>
+                                        <th>Percentage</th>
+                                        <th>Attempt Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-results-table-body">
+                                    <tr>
+                                        <td colspan="5" class="text-center" style="color:var(--text-muted);">Syncing database scores...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Settings Panel -->
+            <div id="section-profile" class="dashboard-section">
+                <div class="dashboard-header">
+                    <h2>Profile Management</h2>
+                    <p style="color:var(--text-muted); font-size:14px;">Configure name representations and credentials.</p>
+                </div>
+
+                <div class="panel" style="max-width: 600px;">
+                    <div class="panel-header">
+                        <h3 class="panel-title">Personal Information</h3>
+                    </div>
+                    <div class="panel-body">
+                        <form id="profile-form" onsubmit="event.preventDefault(); handleProfileUpdate();">
+                            <div class="form-group">
+                                <label for="profile-name-input">Full Name</label>
+                                <input type="text" id="profile-name-input" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-email-input">Email (Read Only)</label>
+                                <input type="email" id="profile-email-input" class="form-control" readonly style="background-color:#E2E8F0; cursor:not-allowed;">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 24px;">
+                                <label for="profile-password-input">New Password (Optional)</label>
+                                <input type="password" id="profile-password-input" class="form-control" placeholder="Leave blank to keep current password" minlength="6">
+                            </div>
+                            <button type="submit" class="btn btn-gold">Update Profile</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/student.js"></script>
+    
+    <script>
+        // Check Auth Guard (Role must be student)
+        checkAuthAndRole(['student'], 'student-login.html');
+
+        // Render dashboard when auth is verified
+        window.addEventListener('authReady', (e) => {
+            const user = e.detail.data;
+            loadStudentDashboard(user);
+        });
+
+        window.addEventListener('profileUpdated', (e) => {
+            document.getElementById('student-name-welcome').innerText = e.detail.fullName;
+        });
+
+        // Tab Switcher
+        function switchTab(tabId) {
+            document.querySelectorAll('.dashboard-section').forEach(sec => sec.classList.remove('active-section'));
+            document.getElementById(`section-${tabId}`).classList.add('active-section');
+            
+            document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
+            document.getElementById(`menu-${tabId}`).classList.add('active');
+
+            // Close sidebar on mobile after clicking a tab
+            closeSidebar();
+        }
+
+        // Mobile Sidebar open/close
+        function toggleSidebar() {
+            const sidebar = document.getElementById('dashboard-sidebar');
+            sidebar.classList.toggle('sidebar-open');
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('dashboard-sidebar');
+            if (sidebar.classList.contains('sidebar-open')) {
+                sidebar.classList.remove('sidebar-open');
+            }
+        }
+
+
+
+        // Close sidebar when clicking the backdrop (the ::before pseudo-element area)
+        document.getElementById('dashboard-sidebar').addEventListener('click', function(e) {
+            // If click target is the sidebar itself (i.e. the backdrop), close it
+            if (e.target === this) {
+                closeSidebar();
+            }
+        });
+
+        // Handle profile update
+        function handleProfileUpdate() {
+            const name = document.getElementById('profile-name-input').value;
+            const pass = document.getElementById('profile-password-input').value;
+            updateStudentProfile(name, pass);
+        }
+    </script>
+</body>
+</html>

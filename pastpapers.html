@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Past Exam Papers – Juris Point</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <div id="navbar-placeholder"></div>
+
+    <!-- Page Title Header -->
+    <section class="page-header">
+        <div class="container text-center">
+            <h1>Past Exam Papers</h1>
+            <p>Access historical LAT and bar examination question files</p>
+        </div>
+    </section>
+
+    <!-- Search & Filter Controls -->
+    <section class="container" style="position: relative; z-index: 10;">
+        <div class="controls-bar flex-between">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" class="form-control" placeholder="Search papers by subject..." oninput="triggerSearchFilter()">
+            </div>
+            
+            <div class="filter-group">
+                <select id="exam-filter" class="select-filter" onchange="triggerSearchFilter()">
+                    <option value="all">All Assessments</option>
+                    <option value="LAT">LAT (Admission Test)</option>
+                    <option value="Law">Law (Bar/LL.B)</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Papers Grid -->
+    <section class="container section-padding" style="padding-top: 0; min-height: 400px;">
+        <div class="doc-grid" id="pastpapers-container">
+            <!-- Dynamic past papers loaded from student.js -->
+            <div class="text-center" style="grid-column: 1/-1; color: var(--text-muted);">
+                <i class="fas fa-circle-notch fa-spin" style="font-size:32px; margin-bottom:12px;"></i>
+                <p>Loading papers catalog...</p>
+            </div>
+        </div>
+    </section>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/student.js"></script>
+    
+    <script>
+        // Check Auth
+        checkAuthAndRole(['student', 'admin'], 'student-login.html');
+
+        window.addEventListener('authReady', () => {
+            loadPastPapers();
+        });
+
+        function triggerSearchFilter() {
+            const search = document.getElementById('search-input').value;
+            const examType = document.getElementById('exam-filter').value;
+            loadPastPapers(search, examType);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Lectures – Juris Point</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <div id="navbar-placeholder"></div>
+
+    <!-- Page Title Header -->
+    <section class="page-header">
+        <div class="container text-center">
+            <h1>Video Lectures</h1>
+            <p>High-quality legal seminars and exam preparation guides</p>
+        </div>
+    </section>
+
+    <!-- Search & Filter Controls -->
+    <section class="container" style="position: relative; z-index: 10;">
+        <div class="controls-bar flex-between">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" class="form-control" placeholder="Search lectures by title..." oninput="triggerSearchFilter()">
+            </div>
+            
+            <div class="filter-group">
+                <select id="category-filter" class="select-filter" onchange="triggerSearchFilter()">
+                    <option value="all">All Categories</option>
+                    <option value="Constitution">Constitutional Law</option>
+                    <option value="English">English Verbal</option>
+                    <option value="Islamic">Islamic Law</option>
+                    <option value="General Knowledge">General Knowledge</option>
+                    <option value="Law of Torts">Law of Torts</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main lectures Grid -->
+    <section class="container section-padding" style="padding-top: 0; min-height: 400px;">
+        <div class="lectures-grid" id="lectures-container">
+            <!-- Dynamic lecture cards loaded from student.js -->
+            <div class="text-center" style="grid-column: 1/-1; color: var(--text-muted);">
+                <i class="fas fa-circle-notch fa-spin" style="font-size:32px; margin-bottom:12px;"></i>
+                <p>Loading lectures...</p>
+            </div>
+        </div>
+    </section>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/student.js"></script>
+    
+    <script>
+        // Restrict page to authenticated students and admins
+        checkAuthAndRole(['student', 'admin'], 'student-login.html');
+
+        window.addEventListener('authReady', () => {
+            loadLectures();
+        });
+
+        function triggerSearchFilter() {
+            const search = document.getElementById('search-input').value;
+            const category = document.getElementById('category-filter').value;
+            loadLectures(search, category);
+        }
+    </script>
+</body>
+</html>

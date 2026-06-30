@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock Assessments – Juris Point</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <!-- Selection View Wrapper -->
+    <div id="mocktests-selection-view">
+        <div id="navbar-placeholder"></div>
+
+        <!-- Page Title Header -->
+        <section class="page-header">
+            <div class="container text-center">
+                <h1>Mock Examination Hall</h1>
+                <p>Simulate formal examinations under timed conditions</p>
+            </div>
+        </section>
+
+        <!-- Main mock test list -->
+        <section class="container section-padding" style="min-height: 400px;">
+            <h2 class="section-title text-center" style="display:block; margin-bottom:48px;">Available Assessments</h2>
+            
+            <div class="grid-2" id="mocktests-list" style="max-width:900px; margin:0 auto;">
+                <!-- Dynamic mock tests list loaded from student.js -->
+                <div class="text-center" style="grid-column: 1/-1; color: var(--text-muted);">
+                    <i class="fas fa-circle-notch fa-spin" style="font-size:32px; margin-bottom:12px;"></i>
+                    <p>Loading exam panels...</p>
+                </div>
+            </div>
+        </section>
+
+        <div id="footer-placeholder"></div>
+    </div>
+
+    <!-- Fullscreen Exam Overlay (Managed by student.js) -->
+    <div id="exam-fullscreen-container" class="exam-fullscreen" style="display:none;"></div>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/student.js"></script>
+    
+    <script>
+        // Check Auth
+        checkAuthAndRole(['student', 'admin'], 'student-login.html');
+
+        window.addEventListener('authReady', () => {
+            loadMockTests();
+        });
+    </script>
+</body>
+</html>

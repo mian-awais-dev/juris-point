@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juris Point – Premium Legal Preparation Portal</title>
+    <meta name="description" content="Prepare for LAT and Law exams with premium lectures, mock tests, and download past papers at Juris Point.">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+
+    <style>
+        /* Lock overlay shown when guest clicks a protected card */
+        #auth-lock-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 25, 50, 0.82);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        #auth-lock-overlay.active { display: flex; }
+        .auth-lock-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 40px 36px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: lockPop 0.25s ease;
+        }
+        @keyframes lockPop {
+            from { transform: scale(0.88); opacity: 0; }
+            to   { transform: scale(1);    opacity: 1; }
+        }
+        .auth-lock-box .lock-icon {
+            width: 68px; height: 68px;
+            background: linear-gradient(135deg, #1E3E62, #C9A84C);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .auth-lock-box .lock-icon i { font-size: 28px; color: #fff; }
+        .auth-lock-box h3 { font-size: 22px; color: #1E3E62; margin-bottom: 10px; }
+        .auth-lock-box p  { font-size: 14px; color: #64748B; margin-bottom: 28px; line-height: 1.6; }
+        .auth-lock-btns   { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .auth-lock-btns a {
+            padding: 11px 28px; border-radius: 8px; font-size: 14px;
+            font-weight: 700; text-decoration: none; transition: 0.2s;
+        }
+        .btn-lock-login    { background: #1E3E62; color: #fff; }
+        .btn-lock-login:hover { background: #16304f; }
+        .btn-lock-register { background: #C9A84C; color: #fff; }
+        .btn-lock-register:hover { background: #b8963e; }
+        .btn-lock-cancel   { background: #F1F5F9; color: #475569; }
+        .btn-lock-cancel:hover { background: #E2E8F0; }
+    </style>
+</head>
+<body>
+
+    <!-- Dynamic Premium Header -->
+    <div id="navbar-placeholder"></div>
+
+    <!-- ── Auth Lock Overlay ── -->
+    <div id="auth-lock-overlay">
+        <div class="auth-lock-box">
+            <div class="lock-icon"><i class="fas fa-lock"></i></div>
+            <h3>Login Required</h3>
+            <p id="lock-message">You need to be logged in as a student to access this content. Please login or create a free account.</p>
+            <div class="auth-lock-btns">
+                <a id="lock-login-btn" href="student-login.html" class="btn-lock-login">Login</a>
+                <a href="student-register.html" class="btn-lock-register">Register Free</a>
+                <button onclick="closeLockOverlay()" class="btn-lock-cancel" style="border:none; cursor:pointer; padding:11px 28px; border-radius:8px; font-size:14px; font-weight:700; background:#F1F5F9; color:#475569;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container grid-2">
+            <div class="hero-content">
+                <span class="hero-tagline">Excellence in Legal Prep</span>
+                <h1>Master the Bar &amp; LAT Entrance Examinations</h1>
+                <p>Welcome to Juris Point. Access comprehensive study guides, take real-time mock exams, and refine your legal skills with topic-specific tests designed by academic experts.</p>
+                <div class="hero-actions">
+                    <a href="student-register.html" class="btn btn-gold">Join as Student</a>
+                    <a href="javascript:void(0)" onclick="goProtected('lectures.html')" class="btn btn-outline-gold">Browse Lectures</a>
+                </div>
+            </div>
+            <div class="hero-img-container">
+                <div class="hero-img-wrapper">
+                    <img src="assets/images/logo.png" alt="Juris Point Logo" style="max-height: 280px;" onerror="this.src='https://images.unsplash.com/photo-1505664194779-8bebcb95c557?auto=format&fit=crop&w=600&q=80'">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section section-padding">
+        <div class="container grid-2">
+            <div class="about-img-frame" style="text-align:center;">
+                <img src="assets/images/founder.jpg" alt="Malik Babar Zahoor - Founder" style="border-radius:12px; object-fit:cover; max-height:420px; width:100%;">
+                <p style="margin-top:14px; font-weight:700; font-size:16px; color:var(--primary-dark);">Malik Babar Zahoor</p>
+                <p style="font-size:13px; color:var(--accent-gold); font-weight:600; text-transform:uppercase; letter-spacing:1px;">Founder &amp; Director</p>
+            </div>
+            <div>
+                <span style="color:var(--accent-gold); font-weight:700; text-transform:uppercase; letter-spacing:1px; font-size:13px;">Our Mission</span>
+                <h2 style="font-size:32px; margin: 8px 0 16px;">Elevating Standards in Law Preparation</h2>
+                <p style="color:var(--text-muted); margin-bottom:16px;">Juris Point stands as a dedicated legal academy preparing aspiring advocates and law scholars. We combine structured theoretical analyses, modern virtual classrooms, and comprehensive past papers to secure your academic benchmarks.</p>
+                <ul class="about-features">
+                    <li><i class="fas fa-check-circle"></i> Complete syllabus coverage for LAT and LL.B exams</li>
+                    <li><i class="fas fa-check-circle"></i> Timed simulation exams with immediate results</li>
+                    <li><i class="fas fa-check-circle"></i> PDF previewing and direct download library</li>
+                </ul>
+                <a href="student-register.html" class="btn btn-primary" style="margin-top:16px;">Create Free Account</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Services / Content Cards -->
+    <section class="section-padding" style="background-color:var(--bg-light);">
+        <div class="container text-center">
+            <h2 class="section-title">Prepare with Precision</h2>
+            <p class="section-subtitle">Navigate your academic requirements through our specialized student interfaces</p>
+            
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-icon flex-center"><i class="fas fa-video"></i></div>
+                    <h3>Expert Lectures</h3>
+                    <p>Access high-definition seminars and online courses covering Constitution, Criminal, and Civil laws.</p>
+                    <a href="javascript:void(0)" onclick="goProtected('lectures.html')" class="card-link">Watch Video Lectures <i class="fas fa-arrow-right"></i></a>
+                </div>
+                
+                <div class="card">
+                    <div class="card-icon flex-center"><i class="fas fa-book-open"></i></div>
+                    <h3>Study Notes</h3>
+                    <p>Review and download structured outlines, definitions, and landmark case files in PDF formats.</p>
+                    <a href="javascript:void(0)" onclick="goProtected('notes.html')" class="card-link">Download Notes <i class="fas fa-arrow-right"></i></a>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon flex-center"><i class="fas fa-file-signature"></i></div>
+                    <h3>Simulation Exams</h3>
+                    <p>Evaluate your strengths in timed conditions. Receive instant score analytics and answers explanation.</p>
+                    <a href="javascript:void(0)" onclick="goProtected('mocktests.html')" class="card-link">Attempt Mock Tests <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Media Section -->
+    <section class="social-section section-padding">
+        <div class="container text-center">
+            <h2 class="section-title">Follow Our Community</h2>
+            <p class="section-subtitle" style="color:#94A3B8;">Get daily tips, legal explanations, and exam updates across our social feeds</p>
+            
+            <div class="grid-4" style="margin-top: 40px;">
+                <a href="https://youtube.com/@jurispoint14?si=LOkLY56PzKRUThyt" target="_blank" class="social-card youtube">
+                    <i class="fab fa-youtube"></i>
+                    <h4>YouTube</h4>
+                    <p>Free legal webinars</p>
+                </a>
+                
+                <a href="https://www.instagram.com/jurispoint14?igsh=MWtqcGFubHNuamRuZA==" target="_blank" class="social-card instagram">
+                    <i class="fab fa-instagram"></i>
+                    <h4>Instagram</h4>
+                    <p>Daily quiz questions</p>
+                </a>
+
+                <a href="https://www.tiktok.com/@jurispoint14?_r=1&_t=ZN-97WQxsh2dr4" target="_blank" class="social-card tiktok">
+                    <i class="fab fa-tiktok"></i>
+                    <h4>TikTok</h4>
+                    <p>60-second law tips</p>
+                </a>
+
+                <a href="https://www.facebook.com/share/1BUhNQFHun/" target="_blank" class="social-card facebook">
+                    <i class="fab fa-facebook-f"></i>
+                    <h4>Facebook</h4>
+                    <p>Study circle discussions</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dynamic Footer -->
+    <div id="footer-placeholder"></div>
+
+    <!-- Configuration and global script loads -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/components.js"></script>
+    <script>
+        // ── Auth state is resolved once on page load and cached ──
+        let _authResolved = false;
+        let _currentUser  = null;
+
+        auth.onAuthStateChanged(function(user) {
+            _authResolved = true;
+            _currentUser  = user || null;
+        });
+
+        function goProtected(page) {
+            if (_authResolved) {
+                // Auth already known — act immediately
+                if (_currentUser) {
+                    window.location.href = page;
+                } else {
+                    showLockOverlay(page);
+                }
+            } else {
+                // Auth still loading (very first click) — wait up to 3 s
+                showLoader(true);
+                var waited = 0;
+                var poll = setInterval(function() {
+                    waited += 100;
+                    if (_authResolved || waited >= 3000) {
+                        clearInterval(poll);
+                        showLoader(false);
+                        if (_currentUser) {
+                            window.location.href = page;
+                        } else {
+                            showLockOverlay(page);
+                        }
+                    }
+                }, 100);
+            }
+        }
+
+        function showLockOverlay(page) {
+            // Point the Login button to the right destination after login
+            document.getElementById('lock-login-btn').href = 'student-login.html?redirect=' + encodeURIComponent(page);
+            document.getElementById('auth-lock-overlay').classList.add('active');
+        }
+
+        function closeLockOverlay() {
+            document.getElementById('auth-lock-overlay').classList.remove('active');
+        }
+
+        // Close overlay when clicking the dark backdrop
+        document.getElementById('auth-lock-overlay').addEventListener('click', function(e) {
+            if (e.target === this) closeLockOverlay();
+        });
+    </script>
+</body>
+</html>

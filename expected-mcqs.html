@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expected Practice MCQs – Juris Point</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <div id="navbar-placeholder"></div>
+
+    <!-- Page Title Header -->
+    <section class="page-header">
+        <div class="container text-center">
+            <h1>Expected Practice MCQs</h1>
+            <p>Practice question banks by categories with interactive correctness feedback</p>
+        </div>
+    </section>
+
+    <!-- Search & Filter Controls -->
+    <section class="container" style="position: relative; z-index: 10;">
+        <div class="controls-bar flex-between" style="justify-content: flex-end;">
+            <div class="filter-group" style="width:100%; max-width:320px;">
+                <select id="category-filter" class="select-filter" style="width:100%;" onchange="triggerFilter()">
+                    <option value="all">All Practice Categories</option>
+                    <option value="Constitution">Constitutional Law</option>
+                    <option value="Islamic Jurisprudence">Islamic Jurisprudence</option>
+                    <option value="English">English Verbal</option>
+                    <option value="General Knowledge">General Knowledge</option>
+                    <option value="Law of Torts">Law of Torts</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main MCQs Container -->
+    <section class="container section-padding" style="padding-top: 0; min-height: 400px;">
+        <div id="mcq-practice-container" style="max-width:800px; margin:0 auto;">
+            <div class="text-center" style="color: var(--text-muted);">
+                <i class="fas fa-circle-notch fa-spin" style="font-size:32px; margin-bottom:12px;"></i>
+                <p>Loading questions library...</p>
+            </div>
+        </div>
+    </section>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/student.js"></script>
+    
+    <script>
+        // Check Auth
+        checkAuthAndRole(['student', 'admin'], 'student-login.html');
+
+        window.addEventListener('authReady', () => {
+            loadExpectedMCQs();
+        });
+
+        function triggerFilter() {
+            const category = document.getElementById('category-filter').value;
+            loadExpectedMCQs(category);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juris Point Setup & Database Seeder</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <div class="auth-page" style="background: linear-gradient(135deg, #0b192c 0%, #1e3e62 100%);">
+        <div class="auth-card" style="max-width: 650px; border-top-color: var(--accent-gold);">
+            <div class="auth-header">
+                <h2>Juris Point Installation Portal</h2>
+                <p>Register your first admin account and seed demonstration mock data.</p>
+            </div>
+
+            <!-- Toast Alert box -->
+            <div id="alert-box" class="alert"></div>
+
+            <div class="panel" style="margin-bottom: 24px;">
+                <div class="panel-header"><h3 class="panel-title">1. Create Master Admin Account</h3></div>
+                <div class="panel-body">
+                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">Admin signups are locked. Use this installer once to register the first admin. Delete this file after completion.</p>
+                    <form onsubmit="event.preventDefault(); handleAdminSignup();">
+                        <div class="form-group">
+                            <label>Admin Full Name</label>
+                            <input type="text" id="admin-name" class="form-control" placeholder="e.g. Master Admin" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Admin Email</label>
+                            <input type="email" id="admin-email" class="form-control" placeholder="admin@jurispoint.com" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label>Password</label>
+                            <input type="password" id="admin-pass" class="form-control" placeholder="Minimum 6 characters" minlength="6" required>
+                        </div>
+                        <button type="submit" class="btn btn-gold" style="width: 100%;">Create Admin Credentials</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header"><h3 class="panel-title">2. Seed Mock Content Data</h3></div>
+                <div class="panel-body">
+                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">Fill your Firestore database with sample lectures, PDF past papers references, topic quizzes, practice MCQs, and sample mock tests to explore the application right away.</p>
+                    <button class="btn btn-primary" onclick="seedMockData()" style="width: 100%;">Seed Database Collections</button>
+                </div>
+            </div>
+            
+            <div class="auth-footer" style="margin-top:24px;">
+                <a href="index.html" class="btn btn-outline" style="padding:6px 12px; font-size:13px;"><i class="fas fa-home" style="margin-right:6px;"></i> Return to Website</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p style="font-weight: 600; color: #1E3E62;">Processing Database Operations...</p>
+    </div>
+
+    <script src="js/firebase-config.js"></script>
+    <script>
+        function handleAdminSignup() {
+            showLoader(true);
+            const alertBox = document.getElementById('alert-box');
+            alertBox.style.display = 'none';
+
+            const name = document.getElementById('admin-name').value;
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-pass').value;
+
+            auth.createUserWithEmailAndPassword(email, pass)
+                .then(userCredential => {
+                    const user = userCredential.user;
+                    // Seed admin role in Firestore users collection
+                    return db.collection('users').doc(user.uid).set({
+                        uid: user.uid,
+                        fullName: name,
+                        email: email,
+                        role: 'admin',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                })
+                .then(() => {
+                    showLoader(false);
+                    alertBox.innerText = "Admin created successfully! You can now log in through admin-login.html.";
+                    alertBox.className = "alert alert-success";
+                    alertBox.style.display = "block";
+                    showToast("Admin account registered!", "success");
+                })
+                .catch(error => {
+                    showLoader(false);
+                    alertBox.innerText = error.message;
+                    alertBox.className = "alert alert-danger";
+                    alertBox.style.display = "block";
+                    showToast(error.message, "error");
+                });
+        }
+
+        function seedMockData() {
+            showLoader(true);
+            const alertBox = document.getElementById('alert-box');
+            alertBox.style.display = 'none';
+
+            const p1 = db.collection('lectures').add({
+                title: "Introduction to Constitutional Jurisprudence",
+                description: "Basic framework structure of constitution, legal principles, and separation of power checks.",
+                category: "Constitution",
+                duration: "45 Mins",
+                videoUrl: "https://www.youtube.com/watch?v=0oL7L5_P2Q8",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            const p2 = db.collection('lectures').add({
+                title: "General Knowledge: World Land Borders & Capitals",
+                description: "Critical geographical facts and dates for general intelligence segments in entrance exams.",
+                category: "General Knowledge",
+                duration: "30 Mins",
+                videoUrl: "https://www.youtube.com/watch?v=aG3sJj0D_s0",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            const p3 = db.collection('notes').add({
+                title: "Syllabus Notes: Law of Torts Summary Outline",
+                description: "Complete summary sheet covering negligences, liability rules, and landmark cases.",
+                category: "Law of Torts",
+                fileUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+                filePath: "dummy_url_placeholder",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            const p4 = db.collection('pastpapers').add({
+                title: "LAT Past Exam Paper 2023",
+                subject: "Admission Test Syllabus",
+                examType: "LAT",
+                year: "2023",
+                fileUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+                filePath: "dummy_url_placeholder_2",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            const p5 = db.collection('expected_mcqs').add({
+                question: "Which organ of state is responsible for interpreting laws and administering justice?",
+                optionA: "Legislature",
+                optionB: "Executive",
+                optionC: "Judiciary",
+                optionD: "Cabinet Secretariat",
+                correctOption: "C",
+                category: "Constitution",
+                explanation: "Under the separation of powers doctrine, the Judiciary interprets laws and administers justice, whereas the Legislature passes laws.",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            const p6 = db.collection('expected_mcqs').add({
+                question: "The Law of Torts is primarily based on which type of law source?",
+                optionA: "Statute Code",
+                optionB: "Common Law Precedents",
+                optionC: "International treaties",
+                optionD: "Religious edicts",
+                correctOption: "B",
+                category: "Law of Torts",
+                explanation: "Tort law is derived from judicial precedents (Common Law) rather than codified legislative statutes.",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            const p7 = db.collection('quizzes').add({
+                title: "Syllabus Quiz: Basics of Tort Law",
+                category: "Law of Torts",
+                questions: [
+                    {
+                        question: "What is the primary objective of tort liability laws?",
+                        optionA: "Punish offenders with prison",
+                        optionB: "Restore injured party to original state through compensation",
+                        optionC: "Collect state revenues",
+                        optionD: "Codify business procedures",
+                        correctOption: "B",
+                        explanation: "Unlike criminal law which punishes, tort law compensates the victim (plaintiff)."
+                    },
+                    {
+                        question: "Which element is NOT necessary to establish negligence in torts?",
+                        optionA: "Duty of care owed",
+                        optionB: "Breach of that duty",
+                        optionC: "Consequent damages suffered",
+                        optionD: "Malicious criminal intent",
+                        correctOption: "D",
+                        explanation: "Negligence does not require intent (malice). Only duty, breach, causation, and damage."
+                    }
+                ],
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            const p8 = db.collection('mocktests').add({
+                title: "Juris Point Master Entrance Mock Test #1",
+                duration: 15,
+                questions: [
+                    {
+                        question: "Who is considered the ultimate custodian of the constitution?",
+                        optionA: "Prime Minister",
+                        optionB: "Supreme Court",
+                        optionC: "Parliament Senate",
+                        optionD: "Attorney General",
+                        correctOption: "B"
+                    },
+                    {
+                        question: "A tort is described legally as what type of wrong?",
+                        optionA: "Criminal wrong",
+                        optionB: "Civil wrong independent of contract",
+                        optionC: "Breach of trust contract",
+                        optionD: "Administrative offense",
+                        correctOption: "B"
+                    },
+                    {
+                        question: "What is the minimum age to register as a voter in democratic legal frameworks usually?",
+                        optionA: "16 Years",
+                        optionB: "18 Years",
+                        optionC: "21 Years",
+                        optionD: "25 Years",
+                        correctOption: "B"
+                    }
+                ],
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            Promise.all([p1, p2, p3, p4, p5, p6, p7, p8])
+                .then(() => {
+                    showLoader(false);
+                    alertBox.innerText = "All database collections seeded successfully with sample content!";
+                    alertBox.className = "alert alert-success";
+                    alertBox.style.display = "block";
+                    showToast("Database seeded!", "success");
+                })
+                .catch(error => {
+                    showLoader(false);
+                    alertBox.innerText = "Seeding failed: " + error.message;
+                    alertBox.className = "alert alert-danger";
+                    alertBox.style.display = "block";
+                    showToast("Seeding failed: " + error.message, "error");
+                });
+        }
+    </script>
+</body>
+</html>

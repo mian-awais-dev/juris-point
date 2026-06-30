@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Topic-wise Quizzes – Juris Point</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <div id="navbar-placeholder"></div>
+
+    <!-- 1. Selection View -->
+    <div id="quizzes-selection-view">
+        <section class="page-header">
+            <div class="container text-center">
+                <h1>Topic-wise Quizzes</h1>
+                <p>Quick assessment quizzes with instant feedback explanations</p>
+            </div>
+        </section>
+
+        <section class="container section-padding" style="min-height: 400px;">
+            <div id="quizzes-list" style="max-width:800px; margin:0 auto;">
+                <div class="text-center" style="color: var(--text-muted);">
+                    <i class="fas fa-circle-notch fa-spin" style="font-size:32px; margin-bottom:12px;"></i>
+                    <p>Fetching quizzes...</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- 2. Play View -->
+    <div id="quiz-play-view" class="container section-padding" style="display:none; min-height: 400px;">
+        <div class="quiz-container" style="max-width:800px; margin:0 auto;">
+            <div class="quiz-header flex-between">
+                <span id="quiz-progress-text" style="font-weight:600; color:var(--primary-medium);">Question 1 of 10</span>
+                <div style="width: 200px;">
+                    <div class="quiz-progress-bar">
+                        <div class="quiz-progress" id="quiz-progress-bar-fill"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="quiz-question-container">
+                <!-- Injected via student.js -->
+            </div>
+            
+            <div class="quiz-actions">
+                <button class="btn btn-outline" onclick="exitQuiz()"><i class="fas fa-arrow-left" style="margin-right:8px;"></i> Quit Quiz</button>
+                <button id="quiz-next-btn" class="btn btn-primary" style="display:none;" onclick="nextQuizQuestion()">Next Question <i class="fas fa-arrow-right" style="margin-left:8px;"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Results View -->
+    <div id="quiz-results-view" class="container section-padding" style="display:none; min-height: 400px;">
+        <div class="auth-card text-center" style="max-width:550px; margin:0 auto;">
+            <div class="results-circle">
+                <div class="results-score" id="quiz-score-percent">0%</div>
+                <div class="results-label" id="quiz-score-number">0 / 0</div>
+            </div>
+            <h2 style="margin-bottom:16px;">Quiz Complete!</h2>
+            <p style="color:var(--text-muted); margin-bottom:24px;">Your results have been processed and saved in your student profile history.</p>
+            <button class="btn btn-primary" onclick="exitQuiz()">Explore Other Quizzes</button>
+        </div>
+    </div>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/student.js"></script>
+    
+    <script>
+        // Check Auth
+        checkAuthAndRole(['student', 'admin'], 'student-login.html');
+
+        window.addEventListener('authReady', () => {
+            loadQuizzes();
+        });
+    </script>
+</body>
+</html>
