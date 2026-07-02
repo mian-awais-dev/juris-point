@@ -95,9 +95,7 @@ Juris Point is a premium, fully responsive, and modern legal education portal bu
      storageBucket: "...",
      messagingSenderId: "...",
      appId: "..."
-   };
-   ```
-5. Open [js/firebase-config.js](file:///C:/Users/Awais/.gemini/antigravity/scratch/juris-point/js/firebase-config.js) and replace the configuration keys placeholder with your actual copied credentials.
+
 
 ---
 
